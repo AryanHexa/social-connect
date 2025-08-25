@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Social Edge - Platform Connection Demo
+
+A modern single-page application for connecting social media platforms with a beautiful UI and server-side API handling.
+
+## Features
+
+- **Multi-Platform Support**: Connect to Instagram, Twitter, and Facebook
+- **Modern UI**: Beautiful gradient design with smooth animations
+- **Server-Side API Routes**: Secure authentication handling
+- **External API Integration**: Instagram connects to localhost:3005
+- **Responsive Design**: Works on desktop and mobile devices
+- **Dark Mode Support**: Automatic theme detection
+
+## Platform Configuration
+
+### Instagram
+
+- **Endpoint**: `http://localhost:3005/api/v1/auth/instagram/login`
+- **Server Route**: `/api/auth/instagram/login`
+- **Status**: External API integration
+- **Required Parameters**:
+  - `redirectUri`: `https://c3a9e16357e2.ngrok-free.app`
+  - `state`: Random string generated server-side
+
+### Twitter
+
+- **Endpoint**: `/api/auth/twitter/login`
+- **Server Route**: `/api/auth/twitter/login`
+- **Status**: Placeholder implementation
+
+### Facebook
+
+- **Endpoint**: `/api/auth/facebook/login`
+- **Server Route**: `/api/auth/facebook/login`
+- **Status**: Placeholder implementation
+
+## Architecture
+
+### Client-Side (UI)
+
+- React components with TypeScript
+- Tailwind CSS for styling
+- Lucide React for icons
+- State management with React hooks
+
+### Server-Side (API)
+
+- Next.js API routes
+- External API integration for Instagram
+- Error handling and response formatting
+- TypeScript for type safety
 
 ## Getting Started
 
-First, run the development server:
+1. **Install Dependencies**
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+   ```bash
+   npm install
+   ```
+
+2. **Start Development Server**
+
+   ```bash
+   npm run dev
+   ```
+
+3. **Access the Application**
+   Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## API Endpoints
+
+### POST /api/auth/instagram/login
+
+Connects to external Instagram authentication service at `localhost:3005`
+
+### POST /api/auth/twitter/login
+
+Placeholder Twitter authentication endpoint
+
+### POST /api/auth/facebook/login
+
+Placeholder Facebook authentication endpoint
+
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- External Instagram service running on localhost:3005 (for Instagram functionality)
+
+### Project Structure
+
+```
+src/
+├── app/
+│   ├── api/auth/
+│   │   ├── instagram/login/route.ts
+│   │   ├── twitter/login/route.ts
+│   │   └── facebook/login/route.ts
+│   ├── page.tsx
+│   └── layout.tsx
+└── lib/
+    └── api.ts
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Technologies Used
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
+- **Icons**: Lucide React
+- **Backend**: Next.js API Routes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Contributing
 
-## Learn More
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is licensed under the MIT License.
