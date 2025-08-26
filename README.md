@@ -1,124 +1,204 @@
-# Social Edge - Platform Connection Demo
+# SocialEdge - Social Media Management Platform
 
-A modern single-page application for connecting social media platforms with a beautiful UI and server-side API handling.
+A modern web application for managing social media presence with AI-powered content generation, built with Next.js, TypeScript, and Tailwind CSS.
 
 ## Features
 
-- **Multi-Platform Support**: Connect to Instagram, Twitter, and Facebook
-- **Modern UI**: Beautiful gradient design with smooth animations
-- **Server-Side API Routes**: Secure authentication handling
-- **External API Integration**: Instagram connects to localhost:3005
-- **Responsive Design**: Works on desktop and mobile devices
-- **Dark Mode Support**: Automatic theme detection
+- 🔐 **User Authentication**: JWT-based authentication with login/register functionality
+- 🐦 **Twitter Integration**: OAuth 2.0 integration with Twitter API
+- 🤖 **AI Content Generation**: Generate engaging social media content using AI
+- 📊 **Analytics Dashboard**: View performance metrics and insights
+- 📱 **Responsive Design**: Modern, mobile-friendly UI built with Tailwind CSS
+- 🔄 **Real-time Sync**: Sync data with social media platforms
+- 🎨 **Modern UI**: Beautiful, intuitive interface with smooth animations
 
-## Platform Configuration
+## Tech Stack
 
-### Instagram
+- **Frontend**: Next.js 15, React 19, TypeScript
+- **Styling**: Tailwind CSS 4
+- **State Management**: Zustand
+- **Forms**: React Hook Form
+- **HTTP Client**: Axios
+- **Icons**: Lucide React
+- **Notifications**: React Hot Toast
+- **Authentication**: JWT with jwt-decode
 
-- **Endpoint**: `http://localhost:3005/api/v1/auth/instagram/login`
-- **Server Route**: `/api/auth/instagram/login`
-- **Status**: External API integration
-- **Required Parameters**:
-  - `redirectUri`: `https://c3a9e16357e2.ngrok-free.app`
-  - `state`: Random string generated server-side
+## Prerequisites
 
-### Twitter
+- Node.js 18+
+- npm or yarn
+- Backend API server running (NestJS with X Gateway endpoints)
 
-- **Endpoint**: `/api/auth/twitter/login`
-- **Server Route**: `/api/auth/twitter/login`
-- **Status**: Placeholder implementation
+## Installation
 
-### Facebook
+1. **Clone the repository**
 
-- **Endpoint**: `/api/auth/facebook/login`
-- **Server Route**: `/api/auth/facebook/login`
-- **Status**: Placeholder implementation
+   ```bash
+   git clone <repository-url>
+   cd web-demo
+   ```
 
-## Architecture
-
-### Client-Side (UI)
-
-- React components with TypeScript
-- Tailwind CSS for styling
-- Lucide React for icons
-- State management with React hooks
-
-### Server-Side (API)
-
-- Next.js API routes
-- External API integration for Instagram
-- Error handling and response formatting
-- TypeScript for type safety
-
-## Getting Started
-
-1. **Install Dependencies**
+2. **Install dependencies**
 
    ```bash
    npm install
    ```
 
-2. **Start Development Server**
+3. **Set up environment variables**
+   Create a `.env.local` file in the root directory:
+
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+   ```
+
+4. **Start the development server**
 
    ```bash
    npm run dev
    ```
 
-3. **Access the Application**
-   Open [http://localhost:3000](http://localhost:3000) in your browser
+5. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
 
-## API Endpoints
-
-### POST /api/auth/instagram/login
-
-Connects to external Instagram authentication service at `localhost:3005`
-
-### POST /api/auth/twitter/login
-
-Placeholder Twitter authentication endpoint
-
-### POST /api/auth/facebook/login
-
-Placeholder Facebook authentication endpoint
-
-## Development
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- External Instagram service running on localhost:3005 (for Instagram functionality)
-
-### Project Structure
+## Project Structure
 
 ```
 src/
-├── app/
-│   ├── api/auth/
-│   │   ├── instagram/login/route.ts
-│   │   ├── twitter/login/route.ts
-│   │   └── facebook/login/route.ts
-│   ├── page.tsx
-│   └── layout.tsx
-└── lib/
-    └── api.ts
+├── app/                    # Next.js app directory
+│   ├── api/               # API routes
+│   ├── dashboard/         # Dashboard pages
+│   ├── login/             # Authentication pages
+│   └── page.tsx           # Landing page
+├── components/            # React components
+│   ├── auth/              # Authentication components
+│   ├── layout/            # Layout components
+│   └── x/                 # Twitter/X components
+└── lib/                   # Utilities and configurations
+    ├── api.ts             # API client and endpoints
+    ├── auth.ts            # Authentication store
+    └── utils.ts           # Utility functions
 ```
 
-## Technologies Used
+## API Integration
 
-- **Frontend**: Next.js 15, React 19, TypeScript
-- **Styling**: Tailwind CSS 4
-- **Icons**: Lucide React
-- **Backend**: Next.js API Routes
+The frontend integrates with the following backend endpoints:
+
+### Authentication
+
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/refresh` - Token refresh
+
+### X (Twitter) API
+
+- `GET /api/v1/x/user` - Get user profile
+- `GET /api/v1/x/user/:twitterId` - Get user by Twitter ID
+- `GET /api/v1/x/posts` - Get user posts
+- `POST /api/v1/x/connect` - Connect Twitter account
+- `POST /api/v1/x/generate-content` - Generate AI content
+- `GET /api/v1/x/admin/users` - Get all users (admin)
+
+### Users API
+
+- `GET /api/v1/users/profile` - Get user profile
+- `PUT /api/v1/users/profile` - Update user profile
+- `GET /api/v1/users` - Get all users
+- `GET /api/v1/users/:id` - Get user by ID
+
+## OAuth 2.0 Flow
+
+The application implements OAuth 2.0 for Twitter integration using a backend-driven approach:
+
+1. **Frontend calls** `/api/v1/x/auth/url` → Gets OAuth redirect URL from backend
+2. **Frontend redirects** to Twitter using the URL from backend
+3. **User authorizes** the application on Twitter
+4. **Twitter redirects back** to frontend with authorization code
+5. **Frontend sends code** to `/api/v1/x/auth/callback` → Backend exchanges code for token
+6. **Backend stores access token** securely and returns success message
+7. **Frontend shows success** and user can fetch data
+
+**Benefits:**
+
+- ✅ **Secure**: Backend handles sensitive OAuth credentials
+- ✅ **Clean**: Frontend only handles redirects and API calls
+- ✅ **Maintainable**: OAuth logic centralized in backend
+- ✅ **Scalable**: Easy to add more OAuth providers
+
+## Key Components
+
+### Authentication
+
+- `LoginForm`: User login with email/password
+- `RegisterForm`: User registration with validation
+- `useAuthStore`: Zustand store for authentication state
+
+### Twitter Integration
+
+- `TwitterConnect`: OAuth connection and manual token input
+- `TwitterUserProfile`: Display user profile with sync functionality
+- `TwitterPosts`: Display posts with pagination and sync
+
+### Content Generation
+
+- `ContentGenerator`: AI-powered content generation with customization options
+
+### Layout
+
+- `Header`: Navigation and user menu
+- `Sidebar`: Collapsible navigation sidebar
+- `DashboardLayout`: Protected layout for authenticated users
+
+## Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+
+### Code Style
+
+- TypeScript for type safety
+- Tailwind CSS for styling
+- React Hook Form for form management
+- Zustand for state management
+- Lucide React for icons
+
+### Environment Variables
+
+| Variable              | Description     | Default                 |
+| --------------------- | --------------- | ----------------------- |
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:3000` |
+
+## Deployment
+
+1. **Build the application**
+
+   ```bash
+   npm run build
+   ```
+
+2. **Start the production server**
+
+   ```bash
+   npm start
+   ```
+
+3. **Environment setup**
+   Ensure all environment variables are set in your production environment.
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Add tests if applicable
 5. Submit a pull request
 
 ## License
 
 This project is licensed under the MIT License.
+
+## Support
+
+For support and questions, please open an issue in the repository.
