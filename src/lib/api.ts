@@ -113,11 +113,14 @@ api.interceptors.response.use(
 // Auth API
 export const authAPI = {
   login: async (emailOrUsername: string, password: string) => {
+    console.log("API_BASE_URL", API_BASE_URL);
+
     try {
       const response = await api.post("/auth/login", {
         emailOrUsername,
         password,
       });
+      console.log("Login API Response:", response.data);
       return response.data;
     } catch (error) {
       console.error("Login API Error:", error);
