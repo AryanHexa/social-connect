@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import OAuthTest from "@/components/debug/OAuthTest";
+import NGROKDebugger from "@/components/debug/NGROKDebugger";
 
 interface DashboardStats {
   totalUsers: number;
@@ -229,6 +230,9 @@ export default function DashboardPage() {
 
       {/* OAuth Debug Component - Remove this after fixing the issue */}
       <OAuthTest />
+
+      {/* NGROK Debug Component - Remove this after fixing the issue */}
+      <NGROKDebugger />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { xAPI } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { Twitter } from "lucide-react";
+import { Twitter, LogOut } from "lucide-react";
 
 interface ConnectFormData {
   accessToken: string;
@@ -112,6 +112,25 @@ export default function TwitterConnect() {
     }
   };
 
+  const handleLogoutTwitter = async () => {
+    try {
+      setIsLoading(true);
+      const result = await xAPI.logout();
+
+      if (result.success) {
+        setIsConnected(false);
+        toast.success("Successfully logged out from Twitter");
+      } else {
+        toast.error("Failed to logout from Twitter");
+      }
+    } catch (error: any) {
+      console.error("Error logging out from Twitter:", error);
+      toast.error("Failed to logout from Twitter");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const onSubmit = async (data: ConnectFormData) => {
     setIsLoading(true);
     try {
@@ -163,12 +182,22 @@ export default function TwitterConnect() {
         </button>
 
         {isConnected && (
-          <button
-            onClick={fetchUserData}
-            className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center justify-center"
-          >
-            📊 Fetch User Data (After Connection)
-          </button>
+          <>
+            <button
+              onClick={fetchUserData}
+              className="w-full bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors flex items-center justify-center"
+            >
+              📊 Fetch User Data (After Connection)
+            </button>
+            <button
+              onClick={handleLogoutTwitter}
+              disabled={isLoading}
+              className="w-full bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors flex items-center justify-center disabled:opacity-50"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {isLoading ? "Logging out..." : "Logout from Twitter"}
+            </button>
+          </>
         )}
       </div>
 

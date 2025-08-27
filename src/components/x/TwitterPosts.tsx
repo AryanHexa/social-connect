@@ -12,6 +12,7 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 
 interface Tweet {
@@ -98,6 +99,25 @@ export default function TwitterPosts({ limit = 10 }: TwitterPostsProps) {
     }
   };
 
+  const handleLogoutTwitter = async () => {
+    try {
+      setIsLoading(true);
+      const result = await xAPI.logout();
+
+      if (result.success) {
+        setTweets([]);
+        toast.success("Successfully logged out from Twitter");
+      } else {
+        toast.error("Failed to logout from Twitter");
+      }
+    } catch (error) {
+      console.error("Error logging out from Twitter:", error);
+      toast.error("Failed to logout from Twitter");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderTweetText = (text: string, entities?: any) => {
     let processedText = text;
 
@@ -138,14 +158,26 @@ export default function TwitterPosts({ limit = 10 }: TwitterPostsProps) {
     <div className="bg-white rounded-lg shadow-lg p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Twitter Posts</h2>
-        <button
-          onClick={handleSync}
-          disabled={isLoading}
-          className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
-        >
-          <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
-          <span>Sync</span>
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleSync}
+            disabled={isLoading}
+            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+            />
+            <span>Sync</span>
+          </button>
+          <button
+            onClick={handleLogoutTwitter}
+            disabled={isLoading}
+            className="flex items-center space-x-2 text-red-600 hover:text-red-700 disabled:opacity-50"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
 
       {isLoading && tweets.length === 0 ? (

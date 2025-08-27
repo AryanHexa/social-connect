@@ -9,9 +9,16 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
+    // Add CORS headers for NGROK
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type, Authorization, X-Requested-With",
   },
   // Add timeout and better error handling
-  timeout: 10000,
+  timeout: 15000, // Increased timeout for NGROK
+  // Handle SSL/TLS issues with NGROK
+  httpsAgent: process.env.NODE_ENV === "development" ? undefined : undefined,
 });
 
 // Request interceptor to add auth token
@@ -22,11 +29,17 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Add NGROK-specific headers
+    if (config.baseURL?.includes("ngrok")) {
+      config.headers["ngrok-skip-browser-warning"] = "true";
+    }
+
     // Log request for debugging
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
       baseURL: config.baseURL,
       headers: config.headers,
       data: config.data,
+      fullURL: `${config.baseURL}${config.url}`,
     });
 
     return config;
@@ -48,7 +61,7 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Enhanced error logging
+    // Enhanced error logging for NGROK debugging
     console.error("API Response Error:", {
       status: error.response?.status,
       statusText: error.response?.statusText,
@@ -56,11 +69,43 @@ api.interceptors.response.use(
       method: error.config?.method,
       data: error.response?.data,
       message: error.message,
+      code: error.code,
+      baseURL: error.config?.baseURL,
+      fullURL: error.config?.baseURL + error.config?.url,
     });
+
+    // Handle specific NGROK errors
+    if (error.code === "ECONNREFUSED") {
+      console.error(
+        "Connection refused - Check if backend is running and NGROK tunnel is active"
+      );
+    }
+
+    if (
+      error.code === "CERT_HAS_EXPIRED" ||
+      error.code === "UNABLE_TO_VERIFY_LEAF_SIGNATURE"
+    ) {
+      console.error(
+        "SSL Certificate issue - This is common with NGROK free tier"
+      );
+    }
 
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
     }
+
+    // Provide user-friendly error messages
+    if (error.message.includes("Network Error")) {
+      error.userMessage =
+        "Network error - Please check your connection and try again";
+    } else if (error.code === "ECONNREFUSED") {
+      error.userMessage =
+        "Cannot connect to server - Please check if the backend is running";
+    } else if (error.response?.status === 0) {
+      error.userMessage =
+        "CORS error - Please check backend CORS configuration";
+    }
+
     return Promise.reject(error);
   }
 );
@@ -234,6 +279,240 @@ export const xAPI = {
       return response.data;
     } catch (error) {
       console.error("Generate Content API Error:", error);
+      throw error;
+    }
+  },
+
+  // Analytics endpoints
+  getTweetAnalytics: async (
+    params: {
+      tweet_ids: string;
+      start_date?: string;
+      end_date?: string;
+    },
+    twitterAccessToken?: string
+  ) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (twitterAccessToken) {
+        headers["X-Twitter-Access-Token"] = twitterAccessToken;
+      }
+
+      const response = await api.get("/x/analytics/tweets", {
+        params,
+        headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get Tweet Analytics API Error:", error);
+      throw error;
+    }
+  },
+
+  getUserAnalytics: async (
+    params?: {
+      start_date?: string;
+      end_date?: string;
+    },
+    twitterAccessToken?: string
+  ) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (twitterAccessToken) {
+        headers["X-Twitter-Access-Token"] = twitterAccessToken;
+      }
+
+      const response = await api.get("/x/analytics/user", {
+        params,
+        headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get User Analytics API Error:", error);
+      throw error;
+    }
+  },
+
+  // Logout endpoint
+  logout: async () => {
+    try {
+      const response = await api.post("/x/logout");
+      return response.data;
+    } catch (error) {
+      console.error("Twitter Logout API Error:", error);
+      throw error;
+    }
+  },
+};
+
+// Users API
+// Instagram API
+export const instagramAPI = {
+  // User endpoints
+  getUser: async (
+    params?: {
+      sync?: string;
+      limit?: string;
+      skip?: string;
+      username?: string;
+    },
+    instagramAccessToken?: string
+  ) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (instagramAccessToken) {
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+      }
+
+      const response = await api.get("/insta/user", {
+        params,
+        headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get Instagram User API Error:", error);
+      throw error;
+    }
+  },
+
+  getUserByInstagramId: async (instagramId: string) => {
+    try {
+      const response = await api.get(`/insta/user/${instagramId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Get Instagram User By ID API Error:", error);
+      throw error;
+    }
+  },
+
+  // Posts endpoints
+  getPosts: async (
+    params?: {
+      sync?: string;
+      limit?: string;
+      skip?: string;
+      after?: string;
+    },
+    instagramAccessToken?: string
+  ) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (instagramAccessToken) {
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+      }
+
+      const response = await api.get("/insta/posts", {
+        params,
+        headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get Instagram Posts API Error:", error);
+      throw error;
+    }
+  },
+
+  // Authentication endpoints
+  generateAuthUrl: async () => {
+    try {
+      const response = await api.get("/insta/auth/url");
+      return response.data;
+    } catch (error) {
+      console.error("Generate Instagram Auth URL API Error:", error);
+      throw error;
+    }
+  },
+
+  handleOAuthCallback: async (callbackData: {
+    code: string;
+    state: string;
+  }) => {
+    try {
+      const response = await api.post("/insta/auth/callback", callbackData);
+      return response.data;
+    } catch (error) {
+      console.error("Instagram OAuth Callback API Error:", error);
+      throw error;
+    }
+  },
+
+  // Content generation
+  generateContent: async (contentData: {
+    platform: string;
+    contentType: string;
+    hashtags?: boolean;
+    niche?: string;
+    ica?: string;
+    userProfileBio?: string;
+    trendingTopic?: string;
+    maxPostsToAnalyze?: string;
+  }) => {
+    try {
+      const response = await api.post("/insta/generate-content", contentData);
+      return response.data;
+    } catch (error) {
+      console.error("Generate Instagram Content API Error:", error);
+      throw error;
+    }
+  },
+
+  // Analytics endpoints
+  getPostAnalytics: async (
+    params: {
+      post_ids: string;
+      start_date?: string;
+      end_date?: string;
+    },
+    instagramAccessToken?: string
+  ) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (instagramAccessToken) {
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+      }
+
+      const response = await api.get("/insta/analytics/posts", {
+        params,
+        headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get Instagram Post Analytics API Error:", error);
+      throw error;
+    }
+  },
+
+  getUserAnalytics: async (
+    params?: {
+      start_date?: string;
+      end_date?: string;
+    },
+    instagramAccessToken?: string
+  ) => {
+    try {
+      const headers: Record<string, string> = {};
+      if (instagramAccessToken) {
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+      }
+
+      const response = await api.get("/insta/analytics/user", {
+        params,
+        headers,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get Instagram User Analytics API Error:", error);
+      throw error;
+    }
+  },
+
+  // Logout endpoint
+  logout: async () => {
+    try {
+      const response = await api.post("/insta/logout");
+      return response.data;
+    } catch (error) {
+      console.error("Instagram Logout API Error:", error);
       throw error;
     }
   },
