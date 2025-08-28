@@ -51,10 +51,9 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Add NGROK-specific headers
-    if (config.baseURL?.includes("ngrok")) {
-      config.headers["ngrok-skip-browser-warning"] = "true";
-    }
+    // Always add NGROK-specific headers since we're proxying to NGROK
+    config.headers["ngrok-skip-browser-warning"] = "true";
+    config.headers["User-Agent"] = "SocialConnect-Frontend/1.0";
 
     // Log request for debugging
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`, {
@@ -312,7 +311,9 @@ export const xAPI = {
         sync: "true",
         ...params,
       };
+      console.log("getting user: ", queryParams);
       const response = await api.get("/x", { params: queryParams });
+      console.log("Get User API Response: ", { resData: response.data });
       return response.data;
     } catch (error) {
       console.error("Get User API Error:", error);
