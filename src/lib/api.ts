@@ -501,9 +501,6 @@ export const instagramAPI = {
   getUser: async (
     params?: {
       sync?: string;
-      limit?: string;
-      skip?: string;
-      username?: string;
     },
     instagramAccessToken?: string
   ) => {
@@ -550,8 +547,8 @@ export const instagramAPI = {
   getPosts: async (
     params?: {
       sync?: string;
-      limit?: string;
-      skip?: string;
+      limit?: number;
+      skip?: number;
       after?: string;
     },
     instagramAccessToken?: string
@@ -573,7 +570,7 @@ export const instagramAPI = {
     }
   },
 
-  // Authentication endpoints
+  // OAuth Authentication endpoints
   generateAuthUrl: async () => {
     try {
       const response = await api.get("/insta/auth/url");
@@ -587,6 +584,7 @@ export const instagramAPI = {
   handleOAuthCallback: async (callbackData: {
     code: string;
     state: string;
+    userId: string;
   }) => {
     try {
       const response = await api.post("/insta/auth/callback", callbackData);
