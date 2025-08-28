@@ -584,10 +584,13 @@ export const instagramAPI = {
   handleOAuthCallback: async (callbackData: {
     code: string;
     state: string;
-    userId: string;
+    userId: number;
   }) => {
     try {
-      const response = await api.post("/insta/auth/callback", callbackData);
+      const response = await api.post(
+        "/insta/auth/callback-handler",
+        callbackData
+      );
       return response.data;
     } catch (error) {
       console.error("Instagram OAuth Callback API Error:", error);

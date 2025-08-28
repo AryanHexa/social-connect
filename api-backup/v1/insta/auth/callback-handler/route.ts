@@ -7,11 +7,12 @@ export async function POST(request: NextRequest) {
     console.log("Instagram callback handler received:", {
       code: code ? `${code.substring(0, 20)}...` : null,
       state,
-      userId,
+      userId: typeof userId,
+      userIdValue: userId,
     });
 
     // Validate required parameters
-    if (!code || !state || !userId) {
+    if (!code || !state || userId === undefined || userId === null) {
       return NextResponse.json(
         {
           success: false,
@@ -70,7 +71,10 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: "token_exchange_failed",
-          message: tokenData.error || tokenData.message || "Failed to exchange code for tokens",
+          message:
+            tokenData.error ||
+            tokenData.message ||
+            "Failed to exchange code for tokens",
         },
         { status: 400 }
       );

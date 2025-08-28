@@ -128,7 +128,7 @@ export default function InstagramConnect() {
       const response = await instagramAPI.handleOAuthCallback({
         code,
         state,
-        userId: authUser.id.toString(),
+        userId: Number(authUser.id),
       });
 
       console.log("OAuth callback response:", response);

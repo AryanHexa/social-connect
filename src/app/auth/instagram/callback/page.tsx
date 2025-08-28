@@ -100,7 +100,7 @@ function InstagramCallbackContent() {
         const response = await instagramAPI.handleOAuthCallback({
           code,
           state,
-          userId: user.id.toString(),
+          userId: Number(user.id),
         });
 
         if (response.success) {
