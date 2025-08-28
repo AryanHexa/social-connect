@@ -505,14 +505,20 @@ export const instagramAPI = {
     instagramAccessToken?: string
   ) => {
     try {
-      const headers: Record<string, string> = {};
+      const queryParams: Record<string, string> = {};
+
+      // Add sync parameter if provided
+      if (params?.sync) {
+        queryParams.sync = params.sync;
+      }
+
+      // Add access token as query parameter (as shown in Swagger)
       if (instagramAccessToken) {
-        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+        queryParams.access_token = instagramAccessToken;
       }
 
       const response = await api.get("/insta/user", {
-        params,
-        headers,
+        params: queryParams,
       });
       return response.data;
     } catch (error) {
@@ -554,14 +560,21 @@ export const instagramAPI = {
     instagramAccessToken?: string
   ) => {
     try {
-      const headers: Record<string, string> = {};
+      const queryParams: Record<string, any> = {};
+
+      // Add all params
+      if (params?.sync) queryParams.sync = params.sync;
+      if (params?.limit) queryParams.limit = params.limit;
+      if (params?.skip) queryParams.skip = params.skip;
+      if (params?.after) queryParams.after = params.after;
+
+      // Add access token as query parameter
       if (instagramAccessToken) {
-        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+        queryParams.access_token = instagramAccessToken;
       }
 
       const response = await api.get("/insta/posts", {
-        params,
-        headers,
+        params: queryParams,
       });
       return response.data;
     } catch (error) {
@@ -625,14 +638,15 @@ export const instagramAPI = {
     instagramAccessToken?: string
   ) => {
     try {
-      const headers: Record<string, string> = {};
+      const queryParams: Record<string, any> = { ...params };
+
+      // Add access token as query parameter
       if (instagramAccessToken) {
-        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+        queryParams.access_token = instagramAccessToken;
       }
 
       const response = await api.get("/insta/analytics/posts", {
-        params,
-        headers,
+        params: queryParams,
       });
       return response.data;
     } catch (error) {
@@ -649,14 +663,15 @@ export const instagramAPI = {
     instagramAccessToken?: string
   ) => {
     try {
-      const headers: Record<string, string> = {};
+      const queryParams: Record<string, any> = { ...params };
+
+      // Add access token as query parameter
       if (instagramAccessToken) {
-        headers["X-Instagram-Access-Token"] = instagramAccessToken;
+        queryParams.access_token = instagramAccessToken;
       }
 
       const response = await api.get("/insta/analytics/user", {
-        params,
-        headers,
+        params: queryParams,
       });
       return response.data;
     } catch (error) {

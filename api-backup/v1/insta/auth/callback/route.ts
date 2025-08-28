@@ -55,13 +55,15 @@ export async function POST(request: NextRequest) {
         name: tokenData.user?.name,
       });
 
+      // Return flat structure as shown in your example
       return NextResponse.json({
         success: true,
-        message: "Instagram account connected successfully!",
-        data: {
-          accessToken: tokenData.accessToken,
-          user: tokenData.user,
-        },
+        message: "Successfully connected Instagram account",
+        accessToken: tokenData.accessToken,
+        instagramUserId: tokenData.user?.id || tokenData.user?.instagramUserId,
+        username: tokenData.user?.username,
+        platform: "INSTAGRAM",
+        connectedAt: new Date().toISOString(),
       });
     } else {
       // Token exchange failed - DO NOT call user API
