@@ -1,67 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 
-interface InstagramTokenResponse {
-  accessToken: string;
-  user: {
-    id: string;
-    username: string;
-    name: string;
-    profilePictureUrl: string;
-  };
-}
-
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { code, state, userId } = await request.json();
 
-    // Extract parameters from the callback URL
-    const code = searchParams.get("code");
-    const state = searchParams.get("state");
-    const error = searchParams.get("error");
-    const errorDescription = searchParams.get("error_description");
-
-    console.log("Instagram callback received:", {
-      code: code ? "***" + code.slice(-4) : null,
+    console.log("Instagram callback handler received:", {
+      code: code ? `${code.substring(0, 20)}...` : null,
       state,
-      error,
-      errorDescription,
+      userId: typeof userId,
+      userIdValue: userId,
     });
 
-    // Handle OAuth error
-    if (error) {
-      console.error("Instagram OAuth error:", error, errorDescription);
-
-      // Redirect to frontend with error
-      const frontendUrl = new URL("/", request.url);
-      frontendUrl.searchParams.set("error", error);
-      if (errorDescription) {
-        frontendUrl.searchParams.set("error_description", errorDescription);
-      }
-
-      return NextResponse.redirect(frontendUrl);
-    }
-
     // Validate required parameters
-    if (!code || !state) {
-      console.error("Missing required parameters:", {
-        code: !!code,
-        state: !!state,
-      });
-
-      const frontendUrl = new URL("/", request.url);
-      frontendUrl.searchParams.set("error", "missing_parameters");
-      frontendUrl.searchParams.set(
-        "error_description",
-        "Missing authorization code or state parameter"
+    if (!code || !state || userId === undefined || userId === null) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Missing required parameters",
+          message: "Code, state, and userId are required",
+        },
+        { status: 400 }
       );
-
-      return NextResponse.redirect(frontendUrl);
     }
 
-    // Call the external Instagram callback endpoint to exchange code for tokens
-    const callbackUrl = `http://localhost:3005/api/v1/auth/instagram/callback?code=${encodeURIComponent(
+    // Use your external backend that already has Instagram OAuth configured
+    // This backend should have the client secret and handle the token exchange
+    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:3005";
+    const callbackUrl = `${backendUrl}/api/v1/auth/instagram/callback?code=${encodeURIComponent(
       code
-    )}&state=${encodeURIComponent(state)}`;
+    )}&state=${encodeURIComponent(state)}&userId=${encodeURIComponent(userId)}`;
+
+    console.log("Calling external backend:", callbackUrl);
 
     const tokenResponse = await fetch(callbackUrl, {
       method: "GET",
@@ -71,7 +40,11 @@ export async function GET(request: NextRequest) {
     });
 
     const tokenData = await tokenResponse.json();
-    console.log("Token exchange response:", tokenData);
+    console.log("Token exchange response:", {
+      success: tokenResponse.ok,
+      hasData: !!tokenData,
+      hasAccessToken: !!tokenData.accessToken,
+    });
 
     if (tokenResponse.ok && tokenData.accessToken) {
       // Successfully obtained tokens and user data
@@ -82,42 +55,41 @@ export async function GET(request: NextRequest) {
         name: tokenData.user?.name,
       });
 
-      const frontendUrl = new URL("/", request.url);
-      frontendUrl.searchParams.set("success", "true");
-      frontendUrl.searchParams.set("platform", "instagram");
-      frontendUrl.searchParams.set(
-        "username",
-        tokenData.user?.username || "user"
-      );
-
-      // TODO: Store the tokens in a database or session here
-      // Example: await storeUserTokens(tokenData.user.id, tokenData.accessToken);
-
-      return NextResponse.redirect(frontendUrl);
+      return NextResponse.json({
+        success: true,
+        message: "Instagram account connected successfully!",
+        data: {
+          accessToken: tokenData.accessToken,
+          user: tokenData.user,
+        },
+      });
     } else {
-      // Token exchange failed
+      // Token exchange failed - DO NOT call user API
       console.error("Token exchange failed:", tokenData);
 
-      const frontendUrl = new URL("/", request.url);
-      frontendUrl.searchParams.set("error", "token_exchange_failed");
-      frontendUrl.searchParams.set(
-        "error_description",
-        tokenData.error || "Failed to exchange code for tokens"
+      return NextResponse.json(
+        {
+          success: false,
+          error: "token_exchange_failed",
+          message:
+            tokenData.error ||
+            tokenData.message ||
+            "Failed to exchange code for tokens",
+        },
+        { status: 400 }
       );
-
-      return NextResponse.redirect(frontendUrl);
     }
   } catch (error) {
-    console.error("Instagram callback error:", error);
+    console.error("Instagram callback handler error:", error);
 
-    // Redirect to frontend with error
-    const frontendUrl = new URL("/", request.url);
-    frontendUrl.searchParams.set("error", "callback_error");
-    frontendUrl.searchParams.set(
-      "error_description",
-      error instanceof Error ? error.message : "Unknown error"
+    // DO NOT call user API on error
+    return NextResponse.json(
+      {
+        success: false,
+        error: "callback_error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 }
     );
-
-    return NextResponse.redirect(frontendUrl);
   }
 }

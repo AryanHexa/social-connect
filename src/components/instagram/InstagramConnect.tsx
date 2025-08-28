@@ -136,8 +136,16 @@ export default function InstagramConnect() {
       if (response.success) {
         toast.success("Instagram account connected successfully!");
 
-        // Fetch user data
-        await checkConnection();
+        // Only fetch user data if callback was successful
+        try {
+          await checkConnection();
+        } catch (userError: any) {
+          console.warn(
+            "Failed to fetch user data after successful OAuth:",
+            userError
+          );
+          // Don't throw here - OAuth was successful, user data fetch is secondary
+        }
 
         // Clean up URL
         window.history.replaceState(
