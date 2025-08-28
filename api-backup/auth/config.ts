@@ -1,1 +1,2 @@
-export const REDIRECT_URI = "https://070dc51d0c4d.ngrok-free.app";
+export const REDIRECT_URI =
+  "https://social-connect-three-indol.vercel.app/auth/instagram/callback";
