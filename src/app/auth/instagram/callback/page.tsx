@@ -20,9 +20,19 @@ function InstagramCallbackContent() {
     const handleCallback = async () => {
       try {
         const code = searchParams.get("code");
-        const state = searchParams.get("state");
+        let state = searchParams.get("state");
         const error = searchParams.get("error");
         const errorDescription = searchParams.get("error_description");
+
+        // Debug logging
+        console.log("Instagram callback params:", {
+          code: code ? `${code.substring(0, 20)}...` : null,
+          state,
+          error,
+          errorDescription,
+          fullUrl: window.location.href,
+          searchParams: Object.fromEntries(searchParams.entries()),
+        });
 
         // Check for OAuth errors
         if (error) {
@@ -31,30 +41,57 @@ function InstagramCallbackContent() {
           );
         }
 
-        if (!code || !state) {
-          throw new Error("Missing authorization code or state parameter");
+        if (!code) {
+          throw new Error("Missing authorization code");
+        }
+
+        if (!state) {
+          console.warn("State parameter missing from Instagram callback");
+          // Try to get state from localStorage as fallback
+          const storedState = localStorage.getItem("instagram_oauth_state");
+          const storedTimestamp = localStorage.getItem(
+            "instagram_oauth_timestamp"
+          );
+
+          if (!storedState) {
+            throw new Error(
+              "No state parameter found. Please try connecting again."
+            );
+          }
+
+          // Check if the OAuth flow is not too old (10 minutes)
+          const timestamp = parseInt(storedTimestamp || "0");
+          if (Date.now() - timestamp > 10 * 60 * 1000) {
+            throw new Error("OAuth flow expired. Please try connecting again.");
+          }
+
+          console.log("Using stored state as fallback:", storedState);
+          // Use stored state for the callback
+          state = storedState;
         }
 
         if (!user) {
           throw new Error("User not authenticated. Please login first.");
         }
 
-        // Verify state parameter
-        const storedState = localStorage.getItem("instagram_oauth_state");
-        const storedTimestamp = localStorage.getItem(
-          "instagram_oauth_timestamp"
-        );
-
-        if (!storedState || storedState !== state) {
-          throw new Error(
-            "Invalid state parameter. Please try connecting again."
+        // Verify state parameter (if we didn't already handle it above)
+        if (searchParams.get("state")) {
+          const storedState = localStorage.getItem("instagram_oauth_state");
+          const storedTimestamp = localStorage.getItem(
+            "instagram_oauth_timestamp"
           );
-        }
 
-        // Check if the OAuth flow is not too old (10 minutes)
-        const timestamp = parseInt(storedTimestamp || "0");
-        if (Date.now() - timestamp > 10 * 60 * 1000) {
-          throw new Error("OAuth flow expired. Please try connecting again.");
+          if (!storedState || storedState !== state) {
+            throw new Error(
+              "Invalid state parameter. Please try connecting again."
+            );
+          }
+
+          // Check if the OAuth flow is not too old (10 minutes)
+          const timestamp = parseInt(storedTimestamp || "0");
+          if (Date.now() - timestamp > 10 * 60 * 1000) {
+            throw new Error("OAuth flow expired. Please try connecting again.");
+          }
         }
 
         setMessage("Processing Instagram connection...");
