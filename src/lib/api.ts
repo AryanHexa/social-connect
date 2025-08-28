@@ -1,19 +1,41 @@
 import axios from "axios";
 import { useAuthStore } from "./auth";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api/v1";
+// Vercel supports server-side proxy via rewrites
+const getApiBaseUrl = () => {
+  // If explicitly set, use it
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    console.log(
+      "Using explicit NEXT_PUBLIC_API_URL:",
+      process.env.NEXT_PUBLIC_API_URL
+    );
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // For Vercel, always use proxy path - Vercel handles the rewrites
+  const url = "/api/v1";
+
+  console.log("Vercel API Config:", {
+    hostname:
+      typeof window !== "undefined" ? window.location.hostname : "server",
+    port: typeof window !== "undefined" ? window.location.port : "N/A",
+    protocol: typeof window !== "undefined" ? window.location.protocol : "N/A",
+    NODE_ENV: process.env.NODE_ENV,
+    VERCEL: process.env.VERCEL,
+    apiUrl: url,
+    note: "Vercel proxy rewrites /api/v1/* to NGROK backend",
+  });
+
+  return url;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
-    // Add CORS headers for NGROK
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers":
-      "Content-Type, Authorization, X-Requested-With",
   },
   // Add timeout and better error handling
   timeout: 15000, // Increased timeout for NGROK
@@ -103,12 +125,98 @@ api.interceptors.response.use(
         "Cannot connect to server - Please check if the backend is running";
     } else if (error.response?.status === 0) {
       error.userMessage =
-        "CORS error - Please check backend CORS configuration";
+        "Network connection failed - Please check your internet connection";
     }
 
     return Promise.reject(error);
   }
 );
+
+// Health Check API
+export const healthAPI = {
+  check: async () => {
+    console.log("Health Check - API_BASE_URL:", API_BASE_URL);
+
+    try {
+      const response = await api.get("/health");
+      console.log("Health Check Response:", response.data);
+      return {
+        success: true,
+        status: response.status,
+        data: response.data,
+        apiUrl: API_BASE_URL,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error: any) {
+      console.error("Health Check Error:", error);
+      return {
+        success: false,
+        status: error.response?.status || 0,
+        error: error.response?.data || error.message,
+        apiUrl: API_BASE_URL,
+        timestamp: new Date().toISOString(),
+      };
+    }
+  },
+
+  // Alternative health check endpoints
+  checkAuth: async () => {
+    try {
+      const response = await api.get("/auth/health");
+      return {
+        success: true,
+        endpoint: "/auth/health",
+        status: response.status,
+        data: response.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        endpoint: "/auth/health",
+        status: error.response?.status || 0,
+        error: error.response?.data || error.message,
+      };
+    }
+  },
+
+  checkX: async () => {
+    try {
+      const response = await api.get("/x/health");
+      return {
+        success: true,
+        endpoint: "/x/health",
+        status: response.status,
+        data: response.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        endpoint: "/x/health",
+        status: error.response?.status || 0,
+        error: error.response?.data || error.message,
+      };
+    }
+  },
+
+  checkInsta: async () => {
+    try {
+      const response = await api.get("/insta/health");
+      return {
+        success: true,
+        endpoint: "/insta/health",
+        status: response.status,
+        data: response.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        endpoint: "/insta/health",
+        status: error.response?.status || 0,
+        error: error.response?.data || error.message,
+      };
+    }
+  },
+};
 
 // Auth API
 export const authAPI = {
@@ -153,6 +261,43 @@ export const authAPI = {
   },
 };
 
+// Admin Auth API
+export const adminAuthAPI = {
+  login: async (email: string, password: string) => {
+    try {
+      const response = await api.post("/admin/auth/login", {
+        email,
+        password,
+      });
+      console.log("Admin Login API Response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Admin Login API Error:", error);
+      throw error;
+    }
+  },
+
+  refreshToken: async (refreshToken: string) => {
+    try {
+      const response = await api.post("/admin/auth/refresh", { refreshToken });
+      return response.data;
+    } catch (error) {
+      console.error("Admin Refresh Token API Error:", error);
+      throw error;
+    }
+  },
+
+  logout: async () => {
+    try {
+      const response = await api.post("/admin/auth/logout");
+      return response.data;
+    } catch (error) {
+      console.error("Admin Logout API Error:", error);
+      throw error;
+    }
+  },
+};
+
 // X (Twitter) API
 export const xAPI = {
   // User endpoints
@@ -167,7 +312,7 @@ export const xAPI = {
         sync: "true",
         ...params,
       };
-      const response = await api.get("/x/user", { params: queryParams });
+      const response = await api.get("/x", { params: queryParams });
       return response.data;
     } catch (error) {
       console.error("Get User API Error:", error);
@@ -388,6 +533,18 @@ export const instagramAPI = {
     }
   },
 
+  getAllUsers: async (limit: number = 100, skip: number = 0) => {
+    try {
+      const response = await api.get("/insta/admin/users", {
+        params: { limit, skip },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Get All Instagram Users API Error:", error);
+      throw error;
+    }
+  },
+
   // Posts endpoints
   getPosts: async (
     params?: {
@@ -521,11 +678,12 @@ export const instagramAPI = {
   },
 };
 
-// Users API
+// Users API (Admin endpoints)
 export const usersAPI = {
+  // User profile management
   getProfile: async () => {
     try {
-      const response = await api.get("/users/profile");
+      const response = await api.get("/auth/profile");
       return response.data;
     } catch (error) {
       console.error("Get Profile API Error:", error);
@@ -535,7 +693,7 @@ export const usersAPI = {
 
   updateProfile: async (profileData: any) => {
     try {
-      const response = await api.put("/users/profile", profileData);
+      const response = await api.put("/auth/profile", profileData);
       return response.data;
     } catch (error) {
       console.error("Update Profile API Error:", error);
@@ -543,9 +701,42 @@ export const usersAPI = {
     }
   },
 
-  getAllUsers: async (params?: { page?: number; limit?: number }) => {
+  changePassword: async (changePasswordData: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => {
     try {
-      const response = await api.get("/users", { params });
+      const response = await api.put(
+        "/auth/change-password",
+        changePasswordData
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Change Password API Error:", error);
+      throw error;
+    }
+  },
+
+  logout: async (logoutData?: { refreshToken?: string }) => {
+    try {
+      const response = await api.post("/auth/logout", logoutData);
+      return response.data;
+    } catch (error) {
+      console.error("Logout API Error:", error);
+      throw error;
+    }
+  },
+
+  // Admin user management endpoints
+  getAllUsers: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: number;
+    role?: string;
+  }) => {
+    try {
+      const response = await api.get("/admin/users", { params });
       return response.data;
     } catch (error) {
       console.error("Get All Users API Error:", error);
@@ -555,10 +746,73 @@ export const usersAPI = {
 
   getUserById: async (userId: string) => {
     try {
-      const response = await api.get(`/users/${userId}`);
+      const response = await api.get(`/admin/users/${userId}`);
       return response.data;
     } catch (error) {
       console.error("Get User By ID API Error:", error);
+      throw error;
+    }
+  },
+
+  createUser: async (userData: {
+    email: string;
+    password: string;
+    username?: string;
+    role?: string;
+  }) => {
+    try {
+      const response = await api.post("/admin/users", userData);
+      return response.data;
+    } catch (error) {
+      console.error("Create User API Error:", error);
+      throw error;
+    }
+  },
+
+  updateUser: async (
+    userId: string,
+    userData: {
+      email?: string;
+      username?: string;
+      role?: string;
+      status?: number;
+    }
+  ) => {
+    try {
+      const response = await api.put(`/admin/users/${userId}`, userData);
+      return response.data;
+    } catch (error) {
+      console.error("Update User API Error:", error);
+      throw error;
+    }
+  },
+
+  deleteUser: async (userId: string) => {
+    try {
+      const response = await api.delete(`/admin/users/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Delete User API Error:", error);
+      throw error;
+    }
+  },
+
+  changeUserPassword: async (
+    userId: string,
+    passwordData: {
+      currentPassword: string;
+      newPassword: string;
+      confirmPassword: string;
+    }
+  ) => {
+    try {
+      const response = await api.put(
+        `/admin/users/${userId}/change-password`,
+        passwordData
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Change User Password API Error:", error);
       throw error;
     }
   },
