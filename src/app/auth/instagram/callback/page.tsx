@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/lib/auth";
 import { instagramAPI } from "@/lib/api";
 import { Loader2, CheckCircle, XCircle, Camera } from "lucide-react";
 import toast from "react-hot-toast";
 
-export default function InstagramCallbackPage() {
+function InstagramCallbackContent() {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -190,5 +190,35 @@ export default function InstagramCallbackPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <div className="flex justify-center mb-6">
+            <Loader2 className="h-16 w-16 text-pink-500 animate-spin" />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Instagram Connection
+          </h1>
+          <p className="text-lg text-pink-600 mb-6">
+            Loading Instagram callback...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main component with Suspense boundary
+export default function InstagramCallbackPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <InstagramCallbackContent />
+    </Suspense>
   );
 }

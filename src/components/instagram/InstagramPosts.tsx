@@ -93,7 +93,7 @@ export default function InstagramPosts({ className }: InstagramPostsProps) {
         }
       } else {
         if (sync) {
-          toast.info("No new posts found");
+          toast.success("No new posts found");
         }
       }
     } catch (error: any) {
