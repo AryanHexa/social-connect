@@ -56,6 +56,8 @@ export default function InstagramUserProfile({
     try {
       console.log("Loading Instagram user profile...", { sync });
 
+      // Note: This component expects the user to be already connected via OAuth
+      // The access token should be stored in your backend and associated with the user
       const response = await instagramAPI.getUser({
         sync: sync ? "true" : "false",
       });

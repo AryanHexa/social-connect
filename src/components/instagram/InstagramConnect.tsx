@@ -136,9 +136,29 @@ export default function InstagramConnect() {
       if (response.success) {
         toast.success("Instagram account connected successfully!");
 
+        // Store the access token if returned
+        if (response.data?.accessToken) {
+          setAccessToken(response.data.accessToken);
+        }
+
         // Only fetch user data if callback was successful
         try {
-          await checkConnection();
+          // Pass the access token to user API call
+          const token = response.data?.accessToken;
+          if (token) {
+            console.log("Using access token from OAuth callback");
+            const userResponse = await instagramAPI.getUser(
+              { sync: "false" },
+              token
+            );
+            if (userResponse?.data) {
+              setUser(userResponse.data);
+              toast.success("User profile loaded successfully!");
+            }
+          } else {
+            console.log("No access token in response, trying checkConnection");
+            await checkConnection();
+          }
         } catch (userError: any) {
           console.warn(
             "Failed to fetch user data after successful OAuth:",
