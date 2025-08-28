@@ -22,10 +22,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Call the external Instagram callback endpoint to exchange code for tokens
-    const callbackUrl = `http://localhost:3005/api/v1/auth/instagram/callback?code=${encodeURIComponent(
+    // Use your external backend that already has Instagram OAuth configured
+    // This backend should have the client secret and handle the token exchange
+    const backendUrl = process.env.BACKEND_API_URL || "http://localhost:3005";
+    const callbackUrl = `${backendUrl}/api/v1/auth/instagram/callback?code=${encodeURIComponent(
       code
     )}&state=${encodeURIComponent(state)}&userId=${encodeURIComponent(userId)}`;
+
+    console.log("Calling external backend:", callbackUrl);
 
     const tokenResponse = await fetch(callbackUrl, {
       method: "GET",
@@ -35,7 +39,11 @@ export async function POST(request: NextRequest) {
     });
 
     const tokenData = await tokenResponse.json();
-    console.log("Token exchange response:", tokenData);
+    console.log("Token exchange response:", {
+      success: tokenResponse.ok,
+      hasData: !!tokenData,
+      hasAccessToken: !!tokenData.accessToken,
+    });
 
     if (tokenResponse.ok && tokenData.accessToken) {
       // Successfully obtained tokens and user data
@@ -62,7 +70,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: "token_exchange_failed",
-          message: tokenData.error || "Failed to exchange code for tokens",
+          message: tokenData.error || tokenData.message || "Failed to exchange code for tokens",
         },
         { status: 400 }
       );
