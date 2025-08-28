@@ -498,27 +498,23 @@ export const xAPI = {
 // Instagram API
 export const instagramAPI = {
   // User endpoints
-  getUser: async (
+    getUser: async (
     params?: {
       sync?: string;
     },
     instagramAccessToken?: string
   ) => {
     try {
-      const queryParams: Record<string, string> = {};
-
-      // Add sync parameter if provided
-      if (params?.sync) {
-        queryParams.sync = params.sync;
-      }
-
-      // Add access token as query parameter (as shown in Swagger)
+      const headers: Record<string, string> = {};
+      
+      // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
-        queryParams.access_token = instagramAccessToken;
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
 
       const response = await api.get("/insta/user", {
-        params: queryParams,
+        params,
+        headers,
       });
       return response.data;
     } catch (error) {
@@ -550,7 +546,7 @@ export const instagramAPI = {
   },
 
   // Posts endpoints
-  getPosts: async (
+    getPosts: async (
     params?: {
       sync?: string;
       limit?: number;
@@ -560,21 +556,16 @@ export const instagramAPI = {
     instagramAccessToken?: string
   ) => {
     try {
-      const queryParams: Record<string, any> = {};
-
-      // Add all params
-      if (params?.sync) queryParams.sync = params.sync;
-      if (params?.limit) queryParams.limit = params.limit;
-      if (params?.skip) queryParams.skip = params.skip;
-      if (params?.after) queryParams.after = params.after;
-
-      // Add access token as query parameter
+      const headers: Record<string, string> = {};
+      
+      // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
-        queryParams.access_token = instagramAccessToken;
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
 
       const response = await api.get("/insta/posts", {
-        params: queryParams,
+        params,
+        headers,
       });
       return response.data;
     } catch (error) {
@@ -629,7 +620,7 @@ export const instagramAPI = {
   },
 
   // Analytics endpoints
-  getPostAnalytics: async (
+    getPostAnalytics: async (
     params: {
       post_ids: string;
       start_date?: string;
@@ -638,15 +629,16 @@ export const instagramAPI = {
     instagramAccessToken?: string
   ) => {
     try {
-      const queryParams: Record<string, any> = { ...params };
-
-      // Add access token as query parameter
+      const headers: Record<string, string> = {};
+      
+      // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
-        queryParams.access_token = instagramAccessToken;
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
 
       const response = await api.get("/insta/analytics/posts", {
-        params: queryParams,
+        params,
+        headers,
       });
       return response.data;
     } catch (error) {
@@ -655,7 +647,7 @@ export const instagramAPI = {
     }
   },
 
-  getUserAnalytics: async (
+    getUserAnalytics: async (
     params?: {
       start_date?: string;
       end_date?: string;
@@ -663,15 +655,16 @@ export const instagramAPI = {
     instagramAccessToken?: string
   ) => {
     try {
-      const queryParams: Record<string, any> = { ...params };
-
-      // Add access token as query parameter
+      const headers: Record<string, string> = {};
+      
+      // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
-        queryParams.access_token = instagramAccessToken;
+        headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
 
       const response = await api.get("/insta/analytics/user", {
-        params: queryParams,
+        params,
+        headers,
       });
       return response.data;
     } catch (error) {
