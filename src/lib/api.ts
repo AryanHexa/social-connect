@@ -498,7 +498,7 @@ export const xAPI = {
 // Instagram API
 export const instagramAPI = {
   // User endpoints
-    getUser: async (
+  getUser: async (
     params?: {
       sync?: string;
     },
@@ -506,7 +506,7 @@ export const instagramAPI = {
   ) => {
     try {
       const headers: Record<string, string> = {};
-      
+
       // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;
@@ -546,7 +546,7 @@ export const instagramAPI = {
   },
 
   // Posts endpoints
-    getPosts: async (
+  getPosts: async (
     params?: {
       sync?: string;
       limit?: number;
@@ -557,7 +557,7 @@ export const instagramAPI = {
   ) => {
     try {
       const headers: Record<string, string> = {};
-      
+
       // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;
@@ -620,7 +620,7 @@ export const instagramAPI = {
   },
 
   // Analytics endpoints
-    getPostAnalytics: async (
+  getPostAnalytics: async (
     params: {
       post_ids: string;
       start_date?: string;
@@ -630,7 +630,7 @@ export const instagramAPI = {
   ) => {
     try {
       const headers: Record<string, string> = {};
-      
+
       // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;
@@ -647,7 +647,7 @@ export const instagramAPI = {
     }
   },
 
-    getUserAnalytics: async (
+  getUserAnalytics: async (
     params?: {
       start_date?: string;
       end_date?: string;
@@ -656,7 +656,7 @@ export const instagramAPI = {
   ) => {
     try {
       const headers: Record<string, string> = {};
-      
+
       // Add Instagram access token as header (as required by your NestJS controller)
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;

@@ -145,6 +145,7 @@ export default function InstagramConnect() {
         try {
           // Pass the access token to user API call
           const token = response.accessToken;
+          console.log("token: ", { token });
           if (token) {
             console.log("Using access token from OAuth callback:", {
               hasToken: !!token,
@@ -152,6 +153,7 @@ export default function InstagramConnect() {
               instagramUserId: response.instagramUserId,
               platform: response.platform,
             });
+            console.log("Getting user data...");
             const userResponse = await instagramAPI.getUser(
               { sync: "false" },
               token

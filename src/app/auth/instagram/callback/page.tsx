@@ -116,6 +116,12 @@ function InstagramCallbackContent() {
           setTimeout(() => {
             router.push("/dashboard/instagram");
           }, 2000);
+
+          // store data from response in local storage
+          localStorage.setItem(
+            "instagram_user",
+            JSON.stringify(response.username)
+          );
         } else {
           throw new Error(
             response.message || "Failed to connect Instagram account"
