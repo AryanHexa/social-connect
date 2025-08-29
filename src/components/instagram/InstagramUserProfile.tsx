@@ -64,12 +64,18 @@ export default function InstagramUserProfile({
 
       console.log("User profile response:", response);
 
-      if (response?.data) {
+      // Handle new response structure
+      if (response?.success !== false && response?.data) {
         setUser(response.data);
 
         if (sync) {
           toast.success("Profile synced successfully!");
         }
+      } else if (response?.requiresConnection) {
+        toast.error(
+          response.message || "Please connect your Instagram account first"
+        );
+        setUser(null); // Clear user data if connection required
       }
     } catch (error: any) {
       console.error("Error loading user profile:", error);

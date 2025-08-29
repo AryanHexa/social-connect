@@ -76,7 +76,8 @@ export default function InstagramPosts({ className }: InstagramPostsProps) {
       const response = await instagramAPI.getPosts(params);
       console.log("Posts response:", response);
 
-      if (response?.data) {
+      // Handle new response structure
+      if (response?.success !== false && response?.data) {
         if (after) {
           // Loading more posts
           setPosts((prev) => [...prev, ...response.data]);
@@ -91,6 +92,11 @@ export default function InstagramPosts({ className }: InstagramPostsProps) {
         if (sync) {
           toast.success(`Synced ${response.data.length} posts from Instagram!`);
         }
+      } else if (response?.requiresConnection) {
+        toast.error(
+          response.message || "Please connect your Instagram account first"
+        );
+        setPosts([]); // Clear posts if connection required
       } else {
         if (sync) {
           toast.success("No new posts found");

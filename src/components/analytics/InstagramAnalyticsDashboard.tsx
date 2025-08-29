@@ -68,12 +68,22 @@ export default function InstagramAnalyticsDashboard({
       if (dateRange.startDate) params.start_date = dateRange.startDate;
       if (dateRange.endDate) params.end_date = dateRange.endDate;
 
-      const data = await instagramAPI.getUserAnalytics(
+      const response = await instagramAPI.getUserAnalytics(
         params,
         instagramAccessToken
       );
-      setUserAnalytics(data);
-      toast.success("Instagram user analytics loaded successfully");
+
+      // Handle new response structure
+      if (response?.success !== false && response?.data) {
+        setUserAnalytics(response);
+        toast.success("Instagram user analytics loaded successfully");
+      } else if (response?.requiresConnection) {
+        throw new Error(
+          response.message || "Instagram connection required for analytics"
+        );
+      } else {
+        throw new Error("Failed to load user analytics data");
+      }
     } catch (err: any) {
       console.error("Error fetching Instagram user analytics:", err);
       const apiError = handleApiError(err);
@@ -109,12 +119,22 @@ export default function InstagramAnalyticsDashboard({
       if (dateRange.startDate) params.start_date = dateRange.startDate;
       if (dateRange.endDate) params.end_date = dateRange.endDate;
 
-      const data = await instagramAPI.getPostAnalytics(
+      const response = await instagramAPI.getPostAnalytics(
         params,
         instagramAccessToken
       );
-      setPostAnalytics(data);
-      toast.success("Instagram post analytics loaded successfully");
+
+      // Handle new response structure
+      if (response?.success !== false && response?.data) {
+        setPostAnalytics(response);
+        toast.success("Instagram post analytics loaded successfully");
+      } else if (response?.requiresConnection) {
+        throw new Error(
+          response.message || "Instagram connection required for analytics"
+        );
+      } else {
+        throw new Error("Failed to load analytics data");
+      }
     } catch (err: any) {
       console.error("Error fetching Instagram post analytics:", err);
       const apiError = handleApiError(err);

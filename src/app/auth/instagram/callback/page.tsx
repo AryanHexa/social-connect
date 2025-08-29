@@ -96,11 +96,11 @@ function InstagramCallbackContent() {
 
         setMessage("Processing Instagram connection...");
 
-        // Process the callback
+        // Process the callback - Updated to match gateway controller structure
         const response = await instagramAPI.handleOAuthCallback({
           code,
           state,
-          userId: Number(user.id),
+          userId: user.id.toString(), // Convert to string as expected by gateway
         });
 
         console.log(

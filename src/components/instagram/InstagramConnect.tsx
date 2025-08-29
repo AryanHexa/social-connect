@@ -59,15 +59,22 @@ export default function InstagramConnect() {
 
     setIsLoading(true);
     try {
-      // Try to get user without sync first
+      // Try to get user without access token - backend will handle token retrieval
       const response = await instagramAPI.getUser({ sync: "false" });
-      if (response?.data) {
+
+      // Handle the new response structure
+      if (response?.success !== false && response?.data) {
         setUser(response.data);
         toast.success("Instagram account connected!");
+      } else if (response?.requiresConnection) {
+        // User needs to connect or reconnect
+        console.log("Instagram connection required:", response.message);
+        setUser(null);
       }
     } catch (error: any) {
       console.log("Instagram not connected yet:", error.message);
       // Not connected yet, which is fine
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -143,11 +150,11 @@ export default function InstagramConnect() {
       localStorage.removeItem("instagram_oauth_state");
       localStorage.removeItem("instagram_oauth_timestamp");
 
-      // Process the callback
+      // Process the callback - Updated to match gateway controller structure
       const response = await instagramAPI.handleOAuthCallback({
         code,
         state,
-        userId: Number(authUser.id),
+        userId: authUser.id.toString(), // Convert to string as expected by gateway
       });
 
       console.log(
@@ -236,10 +243,15 @@ export default function InstagramConnect() {
 
       console.log("Token connection response:", response);
 
-      if (response?.data) {
+      // Handle new response structure
+      if (response?.success !== false && response?.data) {
         setUser(response.data);
         toast.success("Instagram account connected successfully!");
         setAccessToken("");
+      } else if (response?.requiresConnection) {
+        toast.error(
+          response.message || "Failed to connect with provided token"
+        );
       } else {
         throw new Error("Failed to fetch user data");
       }
@@ -261,9 +273,15 @@ export default function InstagramConnect() {
       console.log("Syncing Instagram data...");
       const response = await instagramAPI.getUser({ sync: "true" });
 
-      if (response?.data) {
+      // Handle new response structure
+      if (response?.success !== false && response?.data) {
         setUser(response.data);
         toast.success("Instagram data synced successfully!");
+      } else if (response?.requiresConnection) {
+        toast.error(
+          response.message || "Instagram connection required for sync"
+        );
+        setUser(null); // Clear user data if connection is required
       }
     } catch (error: any) {
       console.error("Sync error:", error);

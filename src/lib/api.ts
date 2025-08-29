@@ -497,7 +497,7 @@ export const xAPI = {
 // Users API
 // Instagram API
 export const instagramAPI = {
-  // User endpoints
+  // User endpoints - Updated to work without access token initially
   getUser: async (
     params?: {
       sync?: string;
@@ -507,7 +507,8 @@ export const instagramAPI = {
     try {
       const headers: Record<string, string> = {};
 
-      // Add Instagram access token as header (as required by your NestJS controller)
+      // Add Instagram access token as header if available
+      // This is optional as per new requirements - backend should handle token retrieval
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
@@ -517,8 +518,20 @@ export const instagramAPI = {
         headers,
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Get Instagram User API Error:", error);
+      // Handle specific error cases for inactive users or missing connections
+      if (error.response?.status === 404 || error.response?.status === 401) {
+        // User not found or inactive - this is expected behavior
+        return {
+          success: false,
+          requiresConnection: true,
+          message:
+            error.response?.data?.message ||
+            "Instagram account not connected or inactive",
+          data: null,
+        };
+      }
       throw error;
     }
   },
@@ -545,7 +558,7 @@ export const instagramAPI = {
     }
   },
 
-  // Posts endpoints
+  // Posts endpoints - Updated to handle token management automatically
   getPosts: async (
     params?: {
       sync?: string;
@@ -558,7 +571,8 @@ export const instagramAPI = {
     try {
       const headers: Record<string, string> = {};
 
-      // Add Instagram access token as header (as required by your NestJS controller)
+      // Add Instagram access token as header if provided
+      // Backend will retrieve stored token if not provided
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
@@ -568,8 +582,17 @@ export const instagramAPI = {
         headers,
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Get Instagram Posts API Error:", error);
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          requiresConnection: true,
+          message: "Instagram access token required or expired",
+          data: [],
+        };
+      }
       throw error;
     }
   },
@@ -588,7 +611,7 @@ export const instagramAPI = {
   handleOAuthCallback: async (callbackData: {
     code: string;
     state: string;
-    userId: number;
+    userId: string; // Changed from number to string to match gateway controller
   }) => {
     try {
       const response = await api.post("/insta/auth/callback", callbackData);
@@ -623,7 +646,7 @@ export const instagramAPI = {
     }
   },
 
-  // Analytics endpoints
+  // Analytics endpoints - Updated to handle token management automatically
   getPostAnalytics: async (
     params: {
       post_ids: string;
@@ -635,7 +658,8 @@ export const instagramAPI = {
     try {
       const headers: Record<string, string> = {};
 
-      // Add Instagram access token as header (as required by your NestJS controller)
+      // Add Instagram access token as header if provided
+      // Backend will use stored token if not provided
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
@@ -645,8 +669,16 @@ export const instagramAPI = {
         headers,
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Get Instagram Post Analytics API Error:", error);
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          requiresConnection: true,
+          message: "Instagram access token required for analytics",
+          data: null,
+        };
+      }
       throw error;
     }
   },
@@ -661,7 +693,8 @@ export const instagramAPI = {
     try {
       const headers: Record<string, string> = {};
 
-      // Add Instagram access token as header (as required by your NestJS controller)
+      // Add Instagram access token as header if provided
+      // Backend will use stored token if not provided
       if (instagramAccessToken) {
         headers["X-Instagram-Access-Token"] = instagramAccessToken;
       }
@@ -671,19 +704,45 @@ export const instagramAPI = {
         headers,
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Get Instagram User Analytics API Error:", error);
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          requiresConnection: true,
+          message: "Instagram access token required for analytics",
+          data: null,
+        };
+      }
       throw error;
     }
   },
 
-  // Logout endpoint
+  // Logout endpoint - Enhanced to handle comprehensive cleanup
   logout: async () => {
     try {
       const response = await api.post("/insta/logout");
+
+      // Clear any local storage data related to Instagram
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("instagram_user");
+        localStorage.removeItem("instagram_access_token");
+        localStorage.removeItem("instagram_oauth_state");
+        localStorage.removeItem("instagram_oauth_timestamp");
+      }
+
       return response.data;
     } catch (error) {
       console.error("Instagram Logout API Error:", error);
+
+      // Even if API call fails, clear local data
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("instagram_user");
+        localStorage.removeItem("instagram_access_token");
+        localStorage.removeItem("instagram_oauth_state");
+        localStorage.removeItem("instagram_oauth_timestamp");
+      }
+
       throw error;
     }
   },
