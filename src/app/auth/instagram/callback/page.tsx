@@ -103,6 +103,11 @@ function InstagramCallbackContent() {
           userId: Number(user.id),
         });
 
+        console.log(
+          "***Instagram OAuth Callback Response in page.tsx***",
+          response
+        );
+
         if (response.success) {
           setStatus("success");
           setMessage("Instagram account connected successfully!");

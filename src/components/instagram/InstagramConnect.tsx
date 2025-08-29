@@ -38,8 +38,19 @@ export default function InstagramConnect() {
     const code = urlParams.get("code");
     const state = urlParams.get("state");
 
+    console.log("***OAuth Callback in InstagramConnect.tsx***", {
+      code,
+      state,
+      authUser,
+    });
+
     if (code && state && authUser) {
-      handleOAuthCallback(code, state);
+      handleOAuthCallback(code, state).then((response) => {
+        console.log(
+          "***OAuth Callback Response in InstagramConnect.tsx use effect***",
+          response
+        );
+      });
     }
   }, [authUser]);
 
@@ -97,6 +108,14 @@ export default function InstagramConnect() {
   };
 
   const handleOAuthCallback = async (code: string, state: string) => {
+    console.log(
+      "***handleOAuthCallback in InstagramConnect.tsx local func params check***",
+      {
+        code,
+        state,
+        authUser,
+      }
+    );
     if (!authUser) {
       toast.error("Authentication required");
       return;
@@ -131,7 +150,10 @@ export default function InstagramConnect() {
         userId: Number(authUser.id),
       });
 
-      console.log("OAuth callback response:", response);
+      console.log(
+        "***OAuth callback response in InstagramConnect.tsx local func***",
+        response
+      );
 
       if (response.success) {
         toast.success("Instagram account connected successfully!");
