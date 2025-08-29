@@ -571,6 +571,8 @@ export const instagramAPI = {
     try {
       const headers: Record<string, string> = {};
 
+      console.log("***Instagram Posts API in api.ts***", params, instagramAccessToken);
+
       // Add Instagram access token as header if provided
       // Backend will retrieve stored token if not provided
       if (instagramAccessToken) {
