@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/v1/:path*", // frontend calls /api/v1/*
-        destination: "https://22993b6acb1b.ngrok-free.app/api/v1/:path*", // proxy to NGROK backend
+        destination: "https://ece35c06d568.ngrok-free.app/api/v1/:path*", // proxy to NGROK backend
       },
     ];
   },
