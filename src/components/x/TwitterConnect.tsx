@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { xAPI } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { Twitter, LogOut } from "lucide-react";
@@ -15,6 +16,7 @@ interface ConnectFormData {
 export default function TwitterConnect() {
   const [isLoading, setIsLoading] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const { user } = useAuthStore();
 
   const {
     register,
@@ -22,6 +24,39 @@ export default function TwitterConnect() {
     reset,
     formState: { errors },
   } = useForm<ConnectFormData>();
+
+  // Check connection status on mount
+  useEffect(() => {
+    if (user) {
+      checkConnection();
+    }
+  }, [user]);
+
+  const checkConnection = async () => {
+    if (!user) return;
+
+    setIsLoading(true);
+    try {
+      // Try to get user without access token - backend will handle token retrieval
+      const response = await xAPI.getUser({ sync: "false" });
+
+      // Handle the response structure
+      if (response?.success !== false && response?.data) {
+        setIsConnected(true);
+        toast.success("Twitter account connected!");
+      } else if (response?.requiresConnection) {
+        // User needs to connect or reconnect
+        console.log("Twitter connection required:", response.message);
+        setIsConnected(false);
+      }
+    } catch (error: any) {
+      console.log("Twitter not connected yet:", error.message);
+      // Not connected yet, which is fine
+      setIsConnected(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Check for OAuth callback parameters
@@ -47,7 +82,15 @@ export default function TwitterConnect() {
       setIsLoading(true);
       console.log("Handling OAuth callback with backend...");
 
-      const result = await xAPI.handleOAuthCallback(code, state);
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      const result = await xAPI.handleOAuthCallback({
+        code,
+        state,
+        userId: user.id.toString(),
+      });
       console.log("OAuth callback result:", result);
 
       if (result.success) {
@@ -85,8 +128,18 @@ export default function TwitterConnect() {
       console.log("Generated auth URL:", result);
 
       if (result.authUrl) {
-        console.log("Redirecting to Twitter OAuth...");
-        window.location.href = result.authUrl;
+        // Generate and store state parameter for security
+        const state = Math.random().toString(36).substring(2, 15);
+        const timestamp = Date.now().toString();
+
+        localStorage.setItem("twitter_oauth_state", state);
+        localStorage.setItem("twitter_oauth_timestamp", timestamp);
+
+        // Append state to the auth URL
+        const authUrlWithState = `${result.authUrl}&state=${state}`;
+
+        console.log("Redirecting to Twitter OAuth with state:", state);
+        window.location.href = authUrlWithState;
       } else {
         toast.error("Failed to generate OAuth URL");
       }

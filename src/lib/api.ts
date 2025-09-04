@@ -402,12 +402,20 @@ export const xAPI = {
   },
 
   // Handle OAuth2 callback
-  handleOAuthCallback: async (code: string, state: string) => {
+  handleOAuthCallback: async (callbackData: {
+    code: string;
+    state: string;
+    userId: string;
+  }) => {
     try {
-      const response = await api.post("/x/auth/callback", { code, state });
+      const response = await api.post("/x/auth/callback", callbackData);
+      console.log(
+        "***Twitter OAuth Callback API Response in api.ts***",
+        response.data
+      );
       return response.data;
     } catch (error) {
-      console.error("Handle OAuth Callback API Error:", error);
+      console.error("Twitter OAuth Callback API Error:", error);
       throw error;
     }
   },
@@ -571,7 +579,11 @@ export const instagramAPI = {
     try {
       const headers: Record<string, string> = {};
 
-      console.log("***Instagram Posts API in api.ts***", params, instagramAccessToken);
+      console.log(
+        "***Instagram Posts API in api.ts***",
+        params,
+        instagramAccessToken
+      );
 
       // Add Instagram access token as header if provided
       // Backend will retrieve stored token if not provided
