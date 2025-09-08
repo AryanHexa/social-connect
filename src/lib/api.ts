@@ -762,6 +762,152 @@ export const instagramAPI = {
   },
 };
 
+// TikTok API
+export const tiktokAPI = {
+  // User endpoints
+  getUser: async (tiktokAccessToken?: string) => {
+    try {
+      const headers: Record<string, string> = {};
+
+      // Add TikTok access token as header if provided
+      // Backend will retrieve stored token if not provided
+      if (tiktokAccessToken) {
+        headers["X-TikTok-Access-Token"] = tiktokAccessToken;
+      }
+
+      const response = await api.get("/tiktok/user", { headers });
+      return response.data;
+    } catch (error: any) {
+      console.error("Get TikTok User API Error:", error);
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          requiresConnection: true,
+          message: "TikTok access token required or expired",
+          data: null,
+        };
+      }
+      throw error;
+    }
+  },
+
+  getPosts: async (
+    params?: {
+      sync?: string;
+      limit?: number;
+      skip?: number;
+      after?: string;
+    },
+    tiktokAccessToken?: string
+  ) => {
+    try {
+      const headers: Record<string, string> = {};
+
+      console.log(
+        "***TikTok Posts API in api.ts***",
+        params,
+        tiktokAccessToken
+      );
+
+      // Add TikTok access token as header if provided
+      // Backend will retrieve stored token if not provided
+      if (tiktokAccessToken) {
+        headers["X-TikTok-Access-Token"] = tiktokAccessToken;
+      }
+
+      const response = await api.get("/tiktok/posts", {
+        params,
+        headers,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error("Get TikTok Posts API Error:", error);
+      // Handle specific error cases
+      if (error.response?.status === 401) {
+        return {
+          success: false,
+          requiresConnection: true,
+          message: "TikTok access token required or expired",
+          data: [],
+        };
+      }
+      throw error;
+    }
+  },
+
+  // OAuth Authentication endpoints
+  generateAuthUrl: async () => {
+    try {
+      const response = await api.get("/tiktok/auth/url");
+      return response.data;
+    } catch (error) {
+      console.error("Generate TikTok Auth URL API Error:", error);
+      throw error;
+    }
+  },
+
+  handleOAuthCallback: async (callbackData: {
+    code: string;
+    state: string;
+    userId: string; // Changed from number to string to match gateway controller
+  }) => {
+    try {
+      const response = await api.post("/tiktok/auth/callback", callbackData);
+      console.log(
+        "***TikTok OAuth Callback API Response in api.ts***",
+        response.data
+      );
+      return response.data;
+    } catch (error) {
+      console.error("TikTok OAuth Callback API Error:", error);
+      throw error;
+    }
+  },
+
+  // Content generation
+  generateContent: async (contentData: {
+    platform: string;
+    contentType: string;
+    hashtags?: boolean;
+    niche?: string;
+    ica?: string;
+    userProfileBio?: string;
+    trendingTopic?: string;
+    maxPostsToAnalyze?: string;
+  }) => {
+    try {
+      const response = await api.post("/tiktok/generate-content", contentData);
+      return response.data;
+    } catch (error) {
+      console.error("TikTok Generate Content API Error:", error);
+      throw error;
+    }
+  },
+
+  // Disconnect TikTok account
+  disconnect: async () => {
+    try {
+      const response = await api.post("/tiktok/disconnect");
+      return response.data;
+    } catch (error) {
+      console.error("TikTok Disconnect API Error:", error);
+      throw error;
+    }
+  },
+
+  // Logout TikTok account
+  logout: async () => {
+    try {
+      const response = await api.post("/tiktok/logout");
+      return response.data;
+    } catch (error) {
+      console.error("TikTok Logout API Error:", error);
+      throw error;
+    }
+  },
+};
+
 // Users API (Admin endpoints)
 export const usersAPI = {
   // User profile management
